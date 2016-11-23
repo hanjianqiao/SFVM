@@ -1,5 +1,7 @@
 #include"sfvm.h"
-#include<cstdlib>
+
+#include<string.h>
+#include<stdio.h>
 #include<iostream>
 struct SFVM sfvm;
 int sfvm_init(unsigned int stack_size, unsigned int temp_data_size, unsigned data_size, unsigned int program_size){
@@ -20,19 +22,19 @@ int sfvm_init(unsigned int stack_size, unsigned int temp_data_size, unsigned dat
 	sfvm.stack_size = stack_size;
 	sfvm.SP = 0;
 
-	std::locale loc("chs");
-	std::wcout.imbue(loc);
-	std::wcin.imbue(loc);
+	//std::locale loc("chs");
+	//std::wcout.imbue(loc);
+	//std::wcin.imbue(loc);
 
 	return 0;
 }
 
-int sfvm_load(char *filename){					//加载二进制可执行文件
+int sfvm_load(char *filename){
 	FILE *file;
 	unsigned int program_size = 0, data_size = 0;
 	char buf[64];
-	strcpy_s(buf, filename);
-	fopen_s(&file, buf, "r");
+	strcpy(buf, filename);
+	file = fopen(buf, "r");
 	if (!file){
 		std::cout << "File not exist.\n";
 	}
@@ -63,10 +65,7 @@ int sfvm_run(){
 	int get_i;
 	wchar_t get_c;
 	sfvm.PC = 0;
-	while (true){							//模拟硬件执行：
-		/*
-		读进PC指向的指令并译码（这里做的只有判断是否有操作数）
-		*/
+	while (true){
 		code = sfvm.program_base[sfvm.PC++];
 		if (code & 0x80){
 			sfvm.operation_data = 0x00000000;
@@ -74,8 +73,8 @@ int sfvm_run(){
 				sfvm.operation_data |= (sfvm.program_base[sfvm.PC++] << (i * 8));
 			}
 		}
-		switch (code & 0x7f){				//switch里面是些细节实现（由于没能处理好64位和32位系统对于int类型的2的补码，这里使用的是1的补码）
-		case CODE::NOP:						//每个case对应的是每条指令的实现
+		switch (code & 0x7f){
+		case CODE::NOP:
 			break;
 		case CODE::NEG:
 			sfvm.stack_base[sfvm.SP] = -((signed int)sfvm.stack_base[sfvm.SP]);
@@ -298,12 +297,5 @@ int main(int argc, char* argv[]){
 			sfvm_run();
 		}
 	}
-	return 0;
-}
-
-int smain(){
-	sfvm_load("out.bin");
-	sfvm_debug(-1);
-	//sfvm_run();
 	return 0;
 }

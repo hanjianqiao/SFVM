@@ -1,7 +1,6 @@
 #include "sfvm.h"
 #include "string.h"
 #include <iostream>
-extern enum CODE;
 
 #define	MAXBREAKPOINT	100
 #define	MAXWATCHEDADDR	100
@@ -11,15 +10,15 @@ struct WATCHPOINT{
 	unsigned int addr;
 };
 
-unsigned int *breakpoints;						//debug功能监视PC
-WATCHPOINT *watchedaddr;						//监控的内存
+unsigned int *breakpoints;
+WATCHPOINT *watchedaddr;
 
-void vmerror(char *s){							//定义一个虚拟机错误输出
+void vmerror(const char *s){
 	std::cout << s << std::endl;
 	exit(1);
 }
 
-int setbreakpoint(unsigned int addr){				//增加一个PC监控点
+int setbreakpoint(unsigned int addr){
 	for (int i = 0; i < MAXBREAKPOINT; i++){
 		if (breakpoints[i] == 0xffffffff){
 			breakpoints[i] = addr;
@@ -29,7 +28,7 @@ int setbreakpoint(unsigned int addr){				//增加一个PC监控点
 	return -1;
 }
 
-int lookup(unsigned int target, unsigned int *arr, unsigned int size){		//查找PC监控点的重载函数
+int lookup(unsigned int target, unsigned int *arr, unsigned int size){
 	for (unsigned int i = 0; i < size; i++){
 		if (arr[i] == target){
 			return i;
@@ -49,7 +48,7 @@ int setwatchpoint(unsigned int addr, unsigned char type){
 	return -1;
 }
 
-unsigned char lookup(unsigned int target, WATCHPOINT *arr, unsigned int size){		//查找内存监控点的重载函数
+unsigned char lookup(unsigned int target, WATCHPOINT *arr, unsigned int size){
 	for (unsigned int i = 0; i < size; i++){
 		if (arr[i].addr == target){
 			return arr[i].type;
@@ -60,12 +59,12 @@ unsigned char lookup(unsigned int target, WATCHPOINT *arr, unsigned int size){		
 
 
 void debug(){
-	char cmdstr[64];											//指令
-	int cmd;													//指令代表的指令码
+	char cmdstr[64];
+	int cmd;
 	int i;
 	bool loop = true;
 	std::cout << "Entered debug breakpoint.\n";
-	while (loop){												//匹配指令码
+	while (loop){
 		std::cin >> cmdstr;
 		if (stringcmp(cmdstr, "continue") == 0){
 			cmd = DEBUGCMD::CONTINUE;
@@ -107,7 +106,7 @@ void debug(){
 			cmd = DEBUGCMD::UNKNOWN;
 		}
 
-		switch (cmd){										//获取指令码，做相应动作
+		switch (cmd){
 		case DEBUGCMD::CONTINUE:
 			loop = false;
 			std::cout << '\n';
@@ -215,7 +214,7 @@ void debug(){
 	}
 }
 
-int sfvm_debug(int cmd){								//debug模式执行函数
+int sfvm_debug(int cmd){
 	int code = 0;
 	int get_i;
 	wchar_t get_c;
@@ -235,10 +234,7 @@ int sfvm_debug(int cmd){								//debug模式执行函数
 		setbreakpoint(cmd);
 	}
 
-	while (true){							//模拟硬件执行：
-		/*
-		读进PC指向的指令并译码（这里做的只有判断是否有操作数）
-		*/
+	while (true){
 		if (lookup(sfvm.PC, breakpoints, MAXBREAKPOINT) != -1){
 			debug();
 		}
@@ -253,7 +249,7 @@ int sfvm_debug(int cmd){								//debug模式执行函数
 				return 1;
 			}
 		}
-		switch (code & 0x7f){				//switch里面是些细节实现
+		switch (code & 0x7f){
 		case CODE::NOP:
 			break;
 		case CODE::NEG:
